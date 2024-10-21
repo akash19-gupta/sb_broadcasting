@@ -90,7 +90,7 @@ view: overall_mis {
       ;;
   }
 
-  suggestions: no
+  suggestions: yes
 
   measure: count {
     type: count
