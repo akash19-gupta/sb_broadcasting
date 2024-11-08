@@ -171,7 +171,7 @@ union all select * from LMTD)
   }
 
   dimension: txn_bucket {
-    type: string
+    type: number
     sql: ${TABLE}.txn_bucket ;;
   }
 
