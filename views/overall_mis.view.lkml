@@ -171,12 +171,12 @@ union all select * from LMTD)
   }
 
   dimension: txn_bucket {
-    type: number
+    type: string
     sql: ${TABLE}.txn_bucket ;;
   }
 
   dimension: txn_bc_percent {
-    type: number
+    type: string
     sql: ${TABLE}.txn_bc_percent ;;
   }
 
