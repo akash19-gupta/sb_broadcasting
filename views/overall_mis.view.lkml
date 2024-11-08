@@ -1,7 +1,7 @@
 view: overall_mis {
   derived_table: {
     sql: With MTD as
-(Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,
+(Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,state,city,region,refurb_flag,
 Case when total_txn<5 then 'below 5'
 when total_txn between 5  and 50 then '5 to 50 txn'
 when total_txn between 50  and 100 then '50 to 100 txn'
@@ -30,8 +30,9 @@ sum(bc_txn_in_11_30_sec)bc_txn_in_11_30_sec,
 sum(bc_txn_in_31_60_sec)bc_txn_in_31_60_sec,
 sum(bc_txn_above_60_sec)bc_txn_above_60_sec,
 sum(total_txn) as total_txn,sum(total_bc_txn) total_bc_txn from
-(SELECT 'MTD' as Flag,nsm_name
-,regional_manager_name,paytm_merchant_id,iot_device_id,final_device_type,replacement_flag,
+(SELECT 'MTD' as Flag,COALESCE(nsm_name,'others')nsm_name
+,COALESCE(regional_manager_name,'others')regional_manager_name,paytm_merchant_id,iot_device_id,final_device_type,replacement_flag,COALESCE(state,'others')state
+,COALESCE(city,'others')city,COALESCE(region,'others')region,refurb_flag,
 case when sum(bc_txn)>0 then 1 else 0 end as BC_device_flag,
  sum(txn) total_txn,sum(bc_txn) total_bc_txn,
 round(cast(sum(bc_txn) as double )*100/cast(sum(txn) as double),0) as ratio,
@@ -48,11 +49,11 @@ from user_paytm_payments.sb_bc_base_snapshot where merchant_txn_flag = 'Active'
 and date(txn_date) >= DATE_TRUNC('month', date(current_date-interval'1'day))
 and date(txn_date) <= date(current_date-interval'2'day)
 and final_device_type is not null
-group by 1,2,3,4,5,6,7
-) group by 1,2,3,4,5,6,7,8),
+group by 1,2,3,4,5,6,7,8,9,10,11
+) group by 1,2,3,4,5,6,7,8,9,10,11,12),
 
 lmtd as
-(Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,
+(Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,state,city,region,refurb_flag,
 Case when total_txn<5 then 'below 5'
 when total_txn between 5  and 50 then '5 to 50 txn'
 when total_txn between 50  and 100 then '50 to 100 txn'
@@ -81,8 +82,9 @@ sum(bc_txn_in_11_30_sec)bc_txn_in_11_30_sec,
 sum(bc_txn_in_31_60_sec)bc_txn_in_31_60_sec,
 sum(bc_txn_above_60_sec)bc_txn_above_60_sec,
 sum(total_txn) as total_txn,sum(total_bc_txn) total_bc_txn from
-(SELECT 'LMTD' as Flag,nsm_name
-,regional_manager_name,paytm_merchant_id,iot_device_id,final_device_type,replacement_flag,
+(SELECT 'LMTD' as Flag,COALESCE(nsm_name,'others')nsm_name
+,COALESCE(regional_manager_name,'others')regional_manager_name,paytm_merchant_id,iot_device_id,final_device_type,replacement_flag,COALESCE(state,'others')state
+,COALESCE(city,'others')city,COALESCE(region,'others')region,refurb_flag,
 case when sum(bc_txn)>0 then 1 else 0 end as BC_device_flag,
  sum(txn) total_txn,sum(bc_txn) total_bc_txn,
 round(cast(sum(bc_txn) as double )*100/cast(sum(txn) as double),0) as ratio,
@@ -99,8 +101,8 @@ from user_paytm_payments.sb_bc_base_snapshot where merchant_txn_flag = 'Active'
 and date(txn_date) <= DATE_TRUNC('day', (current_date-interval'2'day) - INTERVAL '1' month)
 and date(txn_date) >= DATE_TRUNC('month', (current_date-interval'1'day) - INTERVAL '1' month)
 and final_device_type is not null
-group by 1,2,3,4,5,6,7
-) group by 1,2,3,4,5,6,7,8)
+group by 1,2,3,4,5,6,7,8,9,10,11
+) group by 1,2,3,4,5,6,7,8,9,10,11,12)
 
 
 (
@@ -123,7 +125,7 @@ union all select * from LMTD)
   }
 
   dimension: replacement_flag {
-    type: string
+    type: number
     sql: ${TABLE}.replacement_flag ;;
   }
 
@@ -137,9 +139,15 @@ union all select * from LMTD)
     sql: ${TABLE}.regional_manager_name ;;
   }
 
+
   dimension: bc_device_flag {
     type: number
     sql: ${TABLE}.BC_device_flag ;;
+  }
+
+  dimension: refurb_flag {
+    type: number
+    sql: ${TABLE}.refurb_flag ;;
   }
 
   dimension: city {
@@ -194,6 +202,7 @@ union all select * from LMTD)
       nsm_name,
       regional_manager_name,
       bc_device_flag,
+      refurb_flag,
       city,
       state,
       region,
