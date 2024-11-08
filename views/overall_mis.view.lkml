@@ -47,6 +47,7 @@ SUM(COALESCE(_181_240_sec, 0)) + SUM(COALESCE(above_240sec, 0)) as bc_txn_above_
 from user_paytm_payments.sb_bc_base_snapshot where merchant_txn_flag = 'Active'
 and date(txn_date) >= DATE_TRUNC('month', date(current_date-interval'1'day))
 and date(txn_date) <= date(current_date-interval'2'day)
+and final_device_type is not null
 group by 1,2,3,4,5,6,7
 ) group by 1,2,3,4,5,6,7,8),
 
@@ -97,6 +98,7 @@ SUM(COALESCE(_181_240_sec, 0)) + SUM(COALESCE(above_240sec, 0)) as bc_txn_above_
 from user_paytm_payments.sb_bc_base_snapshot where merchant_txn_flag = 'Active'
 and date(txn_date) <= DATE_TRUNC('day', (current_date-interval'2'day) - INTERVAL '1' month)
 and date(txn_date) >= DATE_TRUNC('month', (current_date-interval'1'day) - INTERVAL '1' month)
+and final_device_type is not null
 group by 1,2,3,4,5,6,7
 ) group by 1,2,3,4,5,6,7,8)
 
