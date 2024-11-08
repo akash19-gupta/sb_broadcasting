@@ -120,6 +120,11 @@ union all select * from LMTD)
     sql: ${TABLE}.Flag ;;
   }
 
+  dimension: replacement_flag {
+    type: string
+    sql: ${TABLE}.replacement_flag ;;
+  }
+
   dimension: nsm_name {
     type: string
     sql: ${TABLE}.nsm_name ;;
@@ -183,6 +188,7 @@ union all select * from LMTD)
   set: detail {
     fields: [
       flag,
+      replacement_flag,
       nsm_name,
       regional_manager_name,
       bc_device_flag,
