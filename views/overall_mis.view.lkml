@@ -1,92 +1,110 @@
 view: overall_mis {
   derived_table: {
-    sql: with MTD as
-      ( Select Flag,nsm_name,regional_manager_name,BC_device_flag,city,state,region,final_device_type,
-      Case when total_txn<5 then 'below 5'
-      when total_txn between 5  and 50 then '5 to 50 txn'
-      when total_txn between 50  and 100 then '50 to 100 txn'
-      when total_txn between 100  and 200 then '100 to 200 txn'
-      when total_txn between 201  and 500 then '200 to 500 txn'
-      when total_txn>500 then 'above 500 txn' end as  txn_bucket,
-      case when ratio>90 then 'above 90_%'
+    sql: With MTD as
+(Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,
+Case when total_txn<5 then 'below 5'
+when total_txn between 5  and 50 then '5 to 50 txn'
+when total_txn between 50  and 100 then '50 to 100 txn'
+when total_txn between 100  and 200 then '100 to 200 txn'
+when total_txn between 201  and 500 then '200 to 500 txn'
+when total_txn>500 then 'above 500 txn' end as  txn_bucket,
+case when ratio>90 then 'above 90_%'
 
       when ratio between 80 and 90 then '80 to 90'
 
       when ratio between 70 and 80 then '70 to 80'
 
-      when ratio between 50 and 70 then '50 to 70'
+            when ratio between 50 and 70 then '50 to 70'
 
-      when ratio between 30 and 50 then '30 to 50'
+            when ratio between 30 and 50 then '30 to 50'
 
-      when ratio between 1 and 30 then 'below 30'
+            when ratio between 1 and 30 then 'below 30'
 
-      when ratio=0 then '0' else 'na' end as
-      txn_bc_percent,
-      count(distinct paytm_merchant_id) as Total_devices,
-      sum(total_txn) as total_txn,sum(total_bc_txn) total_bc_txn from (
-      SELECT 'MTD' as Flag,nsm_name
-      ,regional_manager_name,paytm_merchant_id,iot_device_id,city,state,region,final_device_type,case when sum(bc_txn)>0 then 1 else 0 end as BC_device_flag,
-      sum(txn) total_txn,sum(bc_txn) total_bc_txn,
-      round(cast(sum(bc_txn) as double )*100/cast(sum(txn) as double),0) as ratio
+            when ratio=0 then '0' else 'na' end as
+            txn_bc_percent,
+count(distinct paytm_merchant_id) as Total_devices,
+sum(bc_txn_in_0_1_sec)bc_txn_in_0_1_sec,
+sum(bc_txn_in_2_5_sec)bc_txn_in_2_5_sec,
+sum(bc_txn_6_10_sec)bc_txn_6_10_sec,
+sum(bc_txn_in_11_30_sec)bc_txn_in_11_30_sec,
+sum(bc_txn_in_31_60_sec)bc_txn_in_31_60_sec,
+sum(bc_txn_above_60_sec)bc_txn_above_60_sec,
+sum(total_txn) as total_txn,sum(total_bc_txn) total_bc_txn from
+(SELECT 'MTD' as Flag,nsm_name
+,regional_manager_name,paytm_merchant_id,iot_device_id,final_device_type,replacement_flag,
+case when sum(bc_txn)>0 then 1 else 0 end as BC_device_flag,
+ sum(txn) total_txn,sum(bc_txn) total_bc_txn,
+round(cast(sum(bc_txn) as double )*100/cast(sum(txn) as double),0) as ratio,
+SUM(COALESCE(_0sec, 0)) + SUM(COALESCE(_1sec, 0)) as bc_txn_in_0_1_sec,
+SUM(COALESCE(_2sec, 0)) + SUM(COALESCE(_3sec, 0)) + SUM(COALESCE(_4sec, 0)) + SUM(COALESCE(_5sec, 0)) as bc_txn_in_2_5_sec,
+SUM(COALESCE(_6sec, 0)) + SUM(COALESCE(_7sec, 0)) + SUM(COALESCE(_8sec, 0)) + SUM(COALESCE(_9sec, 0)) + SUM(COALESCE(_10sec, 0))  as bc_txn_6_10_sec,
+SUM(COALESCE(_11sec, 0)) + SUM(COALESCE(_12sec, 0)) + SUM(COALESCE(_13sec, 0)) + SUM(COALESCE(_14sec, 0))+
+SUM(COALESCE(_15sec, 0))+SUM(COALESCE(_16sec, 0))+SUM(COALESCE(_17sec, 0))+SUM(COALESCE(_18sec, 0))+
+SUM(COALESCE(_19sec, 0))+SUM(COALESCE(_20sec, 0))+SUM(COALESCE(_20_30_sec, 0)) as bc_txn_in_11_30_sec,
+SUM(COALESCE(_31_60_sec, 0)) as bc_txn_in_31_60_sec,
+SUM(COALESCE(_61_90_sec, 0)) + SUM(COALESCE(_91_120_sec, 0)) + SUM(COALESCE(_121_180_sec, 0)) +
+SUM(COALESCE(_181_240_sec, 0)) + SUM(COALESCE(above_240sec, 0)) as bc_txn_above_60_sec
+from user_paytm_payments.sb_bc_base_snapshot where merchant_txn_flag = 'Active'
+and date(txn_date) >= DATE_TRUNC('month', date(current_date-interval'1'day))
+and date(txn_date) <= date(current_date-interval'2'day)
+group by 1,2,3,4,5,6,7
+) group by 1,2,3,4,5,6,7,8),
 
-      from user_paytm_payments.sb_bc_base_snapshot where merchant_txn_flag = 'Active'
-      and date(txn_date) >= DATE_TRUNC('month', date(current_date-interval'1'day))
-      and date(txn_date) <= date(current_date-interval'1'day)
-      group by 1,2,3,4,5,6,7,8,9
-      ) group by 1,2,3,4,5,6,7,8,9,10),
-
-      lMTD as
-      (Select Flag,nsm_name,regional_manager_name,BC_device_flag,city,state,region,final_device_type,
-      Case when total_txn<5 then 'below 5'
-      when total_txn between 5  and 50 then '5 to 50 txn'
-      when total_txn between 50  and 100 then '50 to 100 txn'
-      when total_txn between 100  and 200 then '100 to 200 txn'
-      when total_txn between 201  and 500 then '200 to 500 txn'
-      when total_txn>500 then 'above 500 txn' end as  txn_bucket,
-      case when ratio>90 then 'above 90_%'
+lmtd as
+(Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,
+Case when total_txn<5 then 'below 5'
+when total_txn between 5  and 50 then '5 to 50 txn'
+when total_txn between 50  and 100 then '50 to 100 txn'
+when total_txn between 100  and 200 then '100 to 200 txn'
+when total_txn between 201  and 500 then '200 to 500 txn'
+when total_txn>500 then 'above 500 txn' end as  txn_bucket,
+case when ratio>90 then 'above 90_%'
 
       when ratio between 80 and 90 then '80 to 90'
 
       when ratio between 70 and 80 then '70 to 80'
 
+            when ratio between 50 and 70 then '50 to 70'
 
-      when ratio between 50 and 70 then '50 to 70'
+            when ratio between 30 and 50 then '30 to 50'
 
-      when ratio between 30 and 50 then '30 to 50'
+            when ratio between 1 and 30 then 'below 30'
 
-      when ratio between 1 and 30 then 'below 30'
+            when ratio=0 then '0' else 'na' end as
+            txn_bc_percent,
+count(distinct paytm_merchant_id) as Total_devices,
+sum(bc_txn_in_0_1_sec)bc_txn_in_0_1_sec,
+sum(bc_txn_in_2_5_sec)bc_txn_in_2_5_sec,
+sum(bc_txn_6_10_sec)bc_txn_6_10_sec,
+sum(bc_txn_in_11_30_sec)bc_txn_in_11_30_sec,
+sum(bc_txn_in_31_60_sec)bc_txn_in_31_60_sec,
+sum(bc_txn_above_60_sec)bc_txn_above_60_sec,
+sum(total_txn) as total_txn,sum(total_bc_txn) total_bc_txn from
+(SELECT 'LMTD' as Flag,nsm_name
+,regional_manager_name,paytm_merchant_id,iot_device_id,final_device_type,replacement_flag,
+case when sum(bc_txn)>0 then 1 else 0 end as BC_device_flag,
+ sum(txn) total_txn,sum(bc_txn) total_bc_txn,
+round(cast(sum(bc_txn) as double )*100/cast(sum(txn) as double),0) as ratio,
+SUM(COALESCE(_0sec, 0)) + SUM(COALESCE(_1sec, 0)) as bc_txn_in_0_1_sec,
+SUM(COALESCE(_2sec, 0)) + SUM(COALESCE(_3sec, 0)) + SUM(COALESCE(_4sec, 0)) + SUM(COALESCE(_5sec, 0)) as bc_txn_in_2_5_sec,
+SUM(COALESCE(_6sec, 0)) + SUM(COALESCE(_7sec, 0)) + SUM(COALESCE(_8sec, 0)) + SUM(COALESCE(_9sec, 0)) + SUM(COALESCE(_10sec, 0))  as bc_txn_6_10_sec,
+SUM(COALESCE(_11sec, 0)) + SUM(COALESCE(_12sec, 0)) + SUM(COALESCE(_13sec, 0)) + SUM(COALESCE(_14sec, 0))+
+SUM(COALESCE(_15sec, 0))+SUM(COALESCE(_16sec, 0))+SUM(COALESCE(_17sec, 0))+SUM(COALESCE(_18sec, 0))+
+SUM(COALESCE(_19sec, 0))+SUM(COALESCE(_20sec, 0))+SUM(COALESCE(_20_30_sec, 0)) as bc_txn_in_11_30_sec,
+SUM(COALESCE(_31_60_sec, 0)) as bc_txn_in_31_60_sec,
+SUM(COALESCE(_61_90_sec, 0)) + SUM(COALESCE(_91_120_sec, 0)) + SUM(COALESCE(_121_180_sec, 0)) +
+SUM(COALESCE(_181_240_sec, 0)) + SUM(COALESCE(above_240sec, 0)) as bc_txn_above_60_sec
+from user_paytm_payments.sb_bc_base_snapshot where merchant_txn_flag = 'Active'
+and date(txn_date) <= DATE_TRUNC('day', (current_date-interval'2'day) - INTERVAL '1' month)
+and date(txn_date) >= DATE_TRUNC('month', (current_date-interval'1'day) - INTERVAL '1' month)
+group by 1,2,3,4,5,6,7
+) group by 1,2,3,4,5,6,7,8)
 
-      when ratio=0 then '0' else 'na' end as
-      txn_bc_percent,
-      count(distinct paytm_merchant_id) as Total_devices,
-      sum(total_txn) as total_txn,sum(total_bc_txn) total_bc_txn from (
-      SELECT 'LMTD' as Flag,nsm_name
-      ,regional_manager_name,paytm_merchant_id,iot_device_id,city,state,region,final_device_type,case when sum(bc_txn)>0 then 1 else 0 end as BC_device_flag,
-      sum(txn) total_txn,sum(bc_txn) total_bc_txn,
-      round(cast(sum(bc_txn) as double )*100/cast(sum(txn) as double),0) as ratio
 
-      from user_paytm_payments.sb_bc_base_snapshot where merchant_txn_flag = 'Active'
-      and date(txn_date) <= DATE_TRUNC('day', (current_date-interval'1'day) - INTERVAL '1' month)
-      and date(txn_date) >= DATE_TRUNC('month', (current_date-interval'1'day) - INTERVAL '1' month)
-      --select DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1' month)
+(
+Select * from MTD
 
-
-      group by 1,2,3,4,5,6,7,8,9
-      ) group by 1,2,3,4,5,6,7,8,9,10)
-
-
-
-
-
-      select Flag,nsm_name,case when nsm_name = 'others' then 'others' else regional_manager_name end as regional_manager_name,BC_device_flag,city,
-      state,case when nsm_name = 'others' then 'others' else region end as region,final_device_type,txn_bucket,txn_bc_percent,Total_devices,total_txn,total_bc_txn from
-      (select Flag,regional_manager_name,BC_device_flag,
-      city,state,region,final_device_type,txn_bucket,txn_bc_percent,Total_devices,total_txn,total_bc_txn,case when nsm_name = 'Bhavin Prajapati' then 'others' else nsm_name end as nsm_name
-      from
-      (
-      Select * from MTD
-
-      union all select * from LMTD))
+union all select * from LMTD)
       ;;
   }
 
