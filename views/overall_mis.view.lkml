@@ -7,7 +7,7 @@ when total_txn between 5  and 50 then '5-50'
 when total_txn between 50  and 100 then '50-100'
 when total_txn between 100  and 200 then '100-200'
 when total_txn between 201  and 500 then '200-500'
-when total_txn>500 then '500+' end as  txn_bucket,
+when total_txn>500 then '500' end as  txn_bucket,
 case when ratio>90 then '>90'
 
       when ratio between 80 and 90 then '80 to 90'
@@ -59,7 +59,7 @@ when total_txn between 5  and 50 then '5-50'
 when total_txn between 50  and 100 then '50-100'
 when total_txn between 100  and 200 then '100-200'
 when total_txn between 201  and 500 then '200-500'
-when total_txn>500 then '500+' end as  txn_bucket,
+when total_txn>500 then '500' end as  txn_bucket,
 case when ratio>90 then '>90'
 
       when ratio between 80 and 90 then '80 to 90'
@@ -171,7 +171,7 @@ union all select * from LMTD)
   }
 
   dimension: txn_bucket {
-    type: string
+    type: number
     sql: ${TABLE}.txn_bucket ;;
   }
 
