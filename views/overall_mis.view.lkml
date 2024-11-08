@@ -2,13 +2,13 @@ view: overall_mis {
   derived_table: {
     sql: With MTD as
 (Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,state,city,region,refurb_flag,
-Case when total_txn<5 then 'below 5'
+Case when total_txn<5 then '<5'
 when total_txn between 5  and 50 then '5 to 50 txn'
 when total_txn between 50  and 100 then '50 to 100 txn'
 when total_txn between 100  and 200 then '100 to 200 txn'
 when total_txn between 201  and 500 then '200 to 500 txn'
-when total_txn>500 then 'above 500 txn' end as  txn_bucket,
-case when ratio>90 then 'above 90_%'
+when total_txn>500 then '> 500 txn' end as  txn_bucket,
+case when ratio>90 then '>90'
 
       when ratio between 80 and 90 then '80 to 90'
 
@@ -18,7 +18,7 @@ case when ratio>90 then 'above 90_%'
 
             when ratio between 30 and 50 then '30 to 50'
 
-            when ratio between 1 and 30 then 'below 30'
+            when ratio between 1 and 30 then '<30'
 
             when ratio=0 then '0' else 'na' end as
             txn_bc_percent,
@@ -54,13 +54,13 @@ group by 1,2,3,4,5,6,7,8,9,10,11
 
 lmtd as
 (Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,state,city,region,refurb_flag,
-Case when total_txn<5 then 'below 5'
+Case when total_txn<5 then '<5'
 when total_txn between 5  and 50 then '5 to 50 txn'
 when total_txn between 50  and 100 then '50 to 100 txn'
 when total_txn between 100  and 200 then '100 to 200 txn'
 when total_txn between 201  and 500 then '200 to 500 txn'
-when total_txn>500 then 'above 500 txn' end as  txn_bucket,
-case when ratio>90 then 'above 90_%'
+when total_txn>500 then '>500 txn' end as  txn_bucket,
+case when ratio>90 then '>90'
 
       when ratio between 80 and 90 then '80 to 90'
 
@@ -70,7 +70,7 @@ case when ratio>90 then 'above 90_%'
 
             when ratio between 30 and 50 then '30 to 50'
 
-            when ratio between 1 and 30 then 'below 30'
+            when ratio between 1 and 30 then '<30'
 
             when ratio=0 then '0' else 'na' end as
             txn_bc_percent,
@@ -171,12 +171,12 @@ union all select * from LMTD)
   }
 
   dimension: txn_bucket {
-    type: string
+    type: number
     sql: ${TABLE}.txn_bucket ;;
   }
 
   dimension: txn_bc_percent {
-    type: string
+    type: number
     sql: ${TABLE}.txn_bc_percent ;;
   }
 
