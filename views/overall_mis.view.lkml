@@ -2,11 +2,11 @@ view: overall_mis {
   derived_table: {
     sql: With MTD as
 (Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,state,city,region,refurb_flag,
-Case when total_txn<5 then '0 to 5'
-when total_txn between 5  and 50 then '5 to 50'
-when total_txn between 50  and 100 then '50 to 100'
-when total_txn between 100  and 200 then '100 to 200'
-when total_txn between 201  and 500 then '200 to 500'
+Case when total_txn<5 then '0-5'
+when total_txn between 5  and 50 then '5-50'
+when total_txn between 50  and 100 then '50-100'
+when total_txn between 100  and 200 then '100-200'
+when total_txn between 201  and 500 then '200-500'
 when total_txn>500 then '500+' end as  txn_bucket,
 case when ratio>90 then '>90'
 
@@ -54,11 +54,11 @@ group by 1,2,3,4,5,6,7,8,9,10,11
 
 lmtd as
 (Select Flag,nsm_name,regional_manager_name,BC_device_flag,final_device_type,replacement_flag,state,city,region,refurb_flag,
-Case when total_txn<5 then '0 to 5'
-when total_txn between 5  and 50 then '5 to 50'
-when total_txn between 50  and 100 then '50 to 100'
-when total_txn between 100  and 200 then '100 to 200'
-when total_txn between 201  and 500 then '200 to 500'
+Case when total_txn<5 then '0-5'
+when total_txn between 5  and 50 then '5-50'
+when total_txn between 50  and 100 then '50-100'
+when total_txn between 100  and 200 then '100-200'
+when total_txn between 201  and 500 then '200-500'
 when total_txn>500 then '500+' end as  txn_bucket,
 case when ratio>90 then '>90'
 
