@@ -124,6 +124,37 @@ union all select * from LMTD)
     sql: ${TABLE}.Flag ;;
   }
 
+  dimension: bc_txn_in_0_1_sec {
+    type: string
+    sql: ${TABLE}.bc_txn_in_0_1_sec ;;
+  }
+
+  dimension: bc_txn_in_2_5_sec {
+    type: string
+    sql: ${TABLE}.bc_txn_in_2_5_sec ;;
+  }
+
+  dimension: bc_txn_6_10_sec {
+    type: string
+    sql: ${TABLE}.bc_txn_6_10_sec ;;
+  }
+
+  dimension: bc_txn_in_11_30_sec {
+    type: string
+    sql: ${TABLE}.bc_txn_in_11_30_sec ;;
+  }
+
+  dimension: bc_txn_in_31_60_sec {
+    type: string
+    sql: ${TABLE}.bc_txn_in_31_60_sec ;;
+  }
+
+  dimension: bc_txn_above_60_sec {
+    type: string
+    sql: ${TABLE}.bc_txn_above_60_sec ;;
+  }
+
+
   dimension: replacement_flag {
     type: number
     sql: ${TABLE}.replacement_flag ;;
@@ -210,6 +241,12 @@ union all select * from LMTD)
       txn_bucket,
       txn_bc_percent,
       total_devices,
+      bc_txn_in_0_1_sec,
+      bc_txn_in_2_5_sec,
+      bc_txn_6_10_sec,
+      bc_txn_in_11_30_sec,
+      bc_txn_in_31_60_sec,
+      bc_txn_above_60_sec,
       total_txn,
       total_bc_txn
     ]
